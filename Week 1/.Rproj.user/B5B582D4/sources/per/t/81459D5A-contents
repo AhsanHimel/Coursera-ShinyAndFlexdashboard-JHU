@@ -1,0 +1,121 @@
+
+# Load libraries
+library(shiny)
+library(ggplot2)
+
+# Define UI for application that draws a histogram
+ui <- fluidPage(
+    
+    # Application title
+    titlePanel("Old Faithful Geyser Data", 
+               windowTitle = "Basic Structure"),
+    
+    # Layout a sidebar and main area
+    sidebarLayout(
+        
+        # Make a sidebar panel
+        sidebarPanel(
+            
+            # Add slider
+            sliderInput(inputId = "bins",
+                        label = "Select Number of bins",
+                        min = 1, max = 50, value = 30
+                        ),
+            
+            # Takes a numeric input
+            numericInput(inputId = "number",
+                         label = 'Select a number for fun',
+                         value = 3,   # Value by default
+                         min = 0, max = 10,
+                         step = 0.5   # Interval to use when stepping between min and max
+                         ),
+            
+            # Add dropdown menu option
+            selectInput(inputId = "color",
+                        # label = "Select a dataset",
+                        label = "Select a color for the plot",
+                        # choices = ls("package:datasets"),
+                        choices = colors(),
+                        selected = "grey",  # default selection
+                        multiple = F,    # Multiple select option from list
+                        selectize = F,   # Whether to use selectize.js
+                        size = 5   # Number of items to show in the selection box
+                                   # Not compatible with selectize=TRUE
+                        
+                        ),
+            
+            
+            ), 
+        
+        position = "left", # slider panel position
+
+        # Show a plot of the generated distribution
+        mainPanel(
+            # Output the plot
+            plotOutput(outputId = "distPlot")
+            )
+        
+    ),
+    
+    # # Takes a test input
+    textInput(inputId = "text",
+              label = "Enter a text here for the title and\ndisplay below",
+              placeholder = "Write here"
+    ),
+    
+    # Output the text
+    textOutput(outputId = "text"),
+    verbatimTextOutput(outputId = "verb"),
+    
+    
+    # Select dataset
+    selectInput(inputId = "dataset",
+                label = "Select a dataset",
+                choices = ls("package:datasets"),
+                selected = "mtcars",  # default selection
+    ),
+    
+    # Output the summary stat
+    verbatimTextOutput(outputId = "summary"),
+    
+    # Output the selected table/ dataset
+    tableOutput(outputId = "table"),
+    
+)
+
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+    
+    # Make the plot
+    output$distPlot <- renderPlot({
+        ggplot(faithful, aes(x = waiting)) +
+            geom_histogram(bins = input$bins, 
+                           fill = input$color, 
+                           border = "white") +
+                theme_classic() +
+            labs(title = input$text)
+    })
+    
+    # Make the text
+    output$text <- renderText({ input$text })
+    
+    # Make the verb
+    output$verb <- renderText({ input$text })
+    
+    # Render the table
+    output$table <- renderTable({
+        dataset <- get(input$dataset)
+        dataset
+    })
+    
+    # Render a summary of the data set
+    output$summary <- renderPrint({
+        dataset <- get(input$dataset)
+        summary(dataset)
+    })
+}
+
+
+# Run the application 
+shinyApp(ui = ui, server = server)

@@ -1,0 +1,135 @@
+---
+title: "Peer Review Three"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    social: menu
+    source_code: embed
+runtime: shiny
+
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(plotly)
+library(shiny)
+
+dat<-read_csv("cel_volden_wiseman_coursera.csv")
+
+dat$Party<-recode(dat$dem,`1`="Democrat",`0`="Republican")
+dat$st_name<-as.factor(dat$st_name)
+
+#######HINT: for Chart D, you'll need to set the height of the renderPlot, using the height argument. Try a value of 750.
+
+#####some data management functions are already included. You need to add the visualization functions.
+
+```
+
+
+Page 1
+======
+
+### Chart A
+
+
+```{r}
+dat %>% 
+  drop_na() %>%
+  filter(year>1979) %>% 
+  group_by(year,Party) %>% 
+  summarise(passed=sum(all_pass)) %>% 
+  ggplot() +
+  geom_area(aes(x = year, y = passed, fill = Party)) +
+  scale_fill_manual(values=c("#0000ff", "#ff0000")) +
+  labs(title = "Number of Bills Passed Since 1980",
+       y = "All Bills Passed", x = "year")
+```
+
+Page 2
+======
+
+Column 1
+--------
+
+
+### Chart B
+
+```{r}
+plotB <- dat%>%
+  drop_na()%>%
+  filter(congress==110) %>%
+  ggplot(aes(x = votepct, y = all_pass, col = Party)) +
+  geom_point(aes(text = paste('Vote Pct.:', votepct, 
+                              '\nAll Pass: ', all_pass,
+                              '\nParty: ', Party, 
+                              '\nThomas Name:',thomas_name))) +
+  labs(x = "Vote Pct.", y = "All Pass", 
+       title = "Passage and Vote Pct., 110th Congress") +
+  geom_smooth(aes(x = votepct, y = all_pass), 
+              method = "loess", formula = "y ~ x") +
+  scale_color_manual(values=c("#0000ff", "#ff0000"))
+  # guides(colour = guide_legend(override.aes = list(shape = 15)))
+ggplotly(plotB, tooltip = c("text"))
+```
+
+Column 2
+---------
+
+
+### Chart C
+
+```{r}
+plotC <- dat%>%
+  drop_na()%>%
+  filter(congress==110) %>%
+  ggplot(aes(x = dwnom1, y = all_pass, col = Party)) +
+  geom_point(aes(text = paste('DW Nominate:', dwnom1, 
+                              '\nAll Pass: ', all_pass,
+                              '\nParty: ', Party, 
+                              '\nThomas Name:',thomas_name))) +
+  labs(x = "DW Nominate.", y = "All Pass", 
+       title = "Passage and Vote Pct., 110th Congress") +
+  geom_smooth(aes(x = dwnom1, y = all_pass), 
+              method = "loess", formula = "y ~ x") +
+  scale_color_manual(values=c("#0000ff", "#ff0000")) 
+ggplotly(plotC, tooltip = c("text"))
+```
+
+Page 3
+======
+
+
+
+Column {.sidebar}
+-----------------
+
+### Chart D
+
+```{r}
+selectInput(inputId = "select", 
+            label = "State",
+            choices = levels(dat$st_name), 
+            multiple = TRUE,
+            selected = levels(dat$st_name))
+```
+
+
+Column
+-----
+
+```{r}
+renderPlotly({
+  ggplotly(
+    dat %>%
+      group_by(st_name) %>%
+      filter(congress==110 & st_name %in% input$select) %>%
+      summarise(passed=sum(all_pass)) %>%
+      ggplot() +
+      geom_bar(aes(y = st_name, x = passed), stat = "identity") +
+      labs(x = "Total Bills Passed Per State", y = "State Name",
+           title = "Total Bills Passed by State Delegations, 110th Congress")
+  ) %>% layout(height = 750, width = 1050)
+})
+```

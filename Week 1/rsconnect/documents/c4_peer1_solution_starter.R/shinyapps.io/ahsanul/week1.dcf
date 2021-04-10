@@ -1,0 +1,13 @@
+name: week1
+title: week1
+username:
+account: ahsanul
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3833000
+bundleId: 4380727
+url: https://ahsanul.shinyapps.io/week1/
+when: 1616429923.24783
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: cces_sample_codebook.txt
